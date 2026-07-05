@@ -1,19 +1,19 @@
 # OwnerView Admin Dashboard
 
-This is the admin panel for OwnerView. It lets you manage orders, customers, reviews, and working files all from one place.
+OwnerView is a super admin panel for business owners to manage everything that comes through their store. You can track orders, manage customers, moderate reviews, handle working files, and connect your Shopify store so orders flow in automatically.
 
 ---
 
 ## How to Log In
 
-Go to http://localhost:5173/ and use these credentials:
+Open http://localhost:5173/ and use these credentials:
 
 | Field    | Value   |
 |----------|---------|
 | Username | `admin` |
 | Password | `admin` |
 
-That's it. Type admin in both fields and hit Sign In.
+Type admin in both fields and hit Sign In.
 
 ---
 
@@ -28,43 +28,64 @@ Then open your browser and go to http://localhost:5173/
 
 ---
 
-## Pages
+## Pages and Features
 
-| Page | What it does |
-|------|-------------|
-| Sign In | Login screen |
-| Orders | See all orders, search by name or ID, upload files |
-| Customers | See all customers, add new ones |
-| Reviews | Read customer reviews, approve or flag them |
-| Working Files | See uploaded files, approve or reject them |
-| Settings | Update your name, email, password, and notifications |
+### Orders
+- See all orders in one table with Order ID, client name, service type, status, date, amount, and file count
+- Filter orders by status (Pending, In Progress, Completed, Cancelled)
+- Search orders by client name, order ID, or service
+- Upload files directly to an order using a drag and drop modal
+- Stat cards at the top show Total Orders, Pending, In Progress, Completed, and Revenue at a glance
+- When Shopify is connected, this page fetches your real orders live and shows a green "Connected" banner
+- When not connected, a banner prompts you to go to Settings to connect Shopify
+
+### Customers
+- See all registered customers with name, email, phone, total orders, total spend, and join date
+- Filter by status (Active, Inactive, Suspended)
+- Search by name, email, or customer ID
+- Add new customers using the Add Customer form
+- Stat cards show Total, Active, Inactive, and Suspended counts
+
+### Reviews
+- See all customer reviews with star ratings and comment previews
+- Take action on each review: Approve, Flag, or Hide
+- Filter by status (Published, Flagged, Hidden)
+- Stat cards show Average Rating, Total Reviews, Published count, and Flagged count
+
+### Working Files
+- See all project files uploaded across orders
+- File type is shown as a badge (PDF, DOCX, ZIP, MP4, etc.)
+- Approve or Reject pending files with one click
+- Upload new files using a drag and drop modal
+- Stat cards show Total Files, Pending Review, Approved, and Rejected
+
+### Settings
+- **Shopify Integration** (see below for setup steps)
+- Update your profile name, email, phone, and timezone
+- Change your password with validation
+- Toggle notifications for new orders, reviews, file uploads, and monthly reports
 
 ---
 
-## Shopify Integration
+## Connecting Your Shopify Store
 
-Right now the orders page shows demo data. To pull in real orders from your Shopify store, you need a Shopify API token.
+You do not need to touch any code or config files. Everything is done through the Settings page inside the dashboard.
 
-Here is how to get one and set it up:
+Here is how to do it:
 
-**Step 1.** Log into your Shopify admin panel and go to Settings.
+**Step 1.** Log into your Shopify admin panel and click Settings at the bottom left.
 
-**Step 2.** Click on "Apps and sales channels" and then click "Develop apps".
+**Step 2.** Click "Apps and sales channels" and then click "Develop apps".
 
-**Step 3.** Click "Create an app", give it a name like "OwnerView Admin", and click Create.
+**Step 3.** Click "Create an app" and give it any name, like "OwnerView".
 
-**Step 4.** Go to "API credentials" inside that app and copy the "Admin API access token".
+**Step 4.** Click "Configure Admin API scopes", check the box for "read_orders", and save.
 
-**Step 5.** Create a file called `.env` in the root of this project and add these two lines:
+**Step 5.** Click "Install app". You will see your Admin API access token appear once. Copy it.
 
-```
-VITE_SHOPIFY_TOKEN=paste_your_token_here
-VITE_SHOPIFY_STORE=your-store-name.myshopify.com
-```
+**Step 6.** Go to the Settings page in this dashboard. Paste your store URL and your token into the Shopify Integration section and click "Save and Connect".
 
-**Step 6.** Open `src/pages/Orders.jsx`. At the top of the file you will find a comment block labeled "SHOPIFY INTEGRATION PLACEHOLDER". Follow the instructions written there to swap the demo data for real Shopify orders. It is about 5 lines of code.
-
-Once that is done, every new order placed on your Shopify store will automatically show up in the dashboard.
+That is it. Your orders will start showing up on the Orders page automatically. You can click Refresh on the Orders page anytime to pull in the latest ones.
 
 ---
 
@@ -75,9 +96,3 @@ Once that is done, every new order placed on your Shopify store will automatical
 - Axios for API calls
 - Vanilla CSS with custom properties
 - Inter font from Google Fonts
-
----
-
-## Backend API
-
-The app also has a backend at https://hiteshy44.pythonanywhere.com/api/v1/ for when you want to manage orders that come through your own platform instead of Shopify.
