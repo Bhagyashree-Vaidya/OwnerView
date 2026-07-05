@@ -8,6 +8,38 @@ import { ToastContainer, useToast } from '../components/Toast';
 import { mockOrders } from '../mockData';
 import '../components/StatCard.css';
 
+// =============================================================
+// SHOPIFY INTEGRATION PLACEHOLDER
+// =============================================================
+// Right now this page loads demo orders from mockData.js.
+// To connect your real Shopify store, do the following:
+//
+// 1. Go to your Shopify admin > Settings > Apps and sales channels
+//    > Develop apps > Create an app.
+// 2. Give it a name like "OwnerView Admin" and click Create.
+// 3. Under API credentials, copy your "Admin API access token".
+// 4. Paste it in a .env file at the root of this project:
+//    VITE_SHOPIFY_TOKEN=your_token_here
+//    VITE_SHOPIFY_STORE=your-store-name.myshopify.com
+// 5. Replace the mock import above with this real fetch:
+//
+// import { useEffect } from 'react';
+// const [orders, setOrders] = useState([]);
+// useEffect(() => {
+//   fetch(`https://${import.meta.env.VITE_SHOPIFY_STORE}/admin/api/2024-01/orders.json?status=any`, {
+//     headers: {
+//       'X-Shopify-Access-Token': import.meta.env.VITE_SHOPIFY_TOKEN,
+//       'Content-Type': 'application/json',
+//     },
+//   })
+//     .then(res => res.json())
+//     .then(data => setOrders(data.orders))
+//     .catch(err => console.error('Shopify fetch failed:', err));
+// }, []);
+//
+// Then replace "mockOrders" everywhere below with "orders".
+// =============================================================
+
 const statusBadge = {
   'Pending':     'badge badge-yellow',
   'In Progress': 'badge badge-blue',

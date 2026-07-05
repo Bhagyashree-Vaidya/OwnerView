@@ -90,16 +90,16 @@ const SignIn = () => {
 
           <form className="signin-form" onSubmit={handleSubmit}>
             <div className="form-group">
-              <label className="form-label">Email address</label>
+              <label className="form-label">Username</label>
               <input
-                type="email"
+                type="text"
                 name="email"
                 className="form-input signin-input-lg"
-                placeholder="admin@corelconvert.com"
+                placeholder="admin"
                 value={formData.email}
                 onChange={handleChange}
                 required
-                autoComplete="email"
+                autoComplete="username"
               />
             </div>
 
