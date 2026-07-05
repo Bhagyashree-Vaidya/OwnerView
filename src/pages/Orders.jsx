@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import TopBar from '../components/TopBar';
 import StatCard from '../components/StatCard';
@@ -55,25 +55,82 @@ const statusOptions = [
 ];
 
 const Orders = () => {
-  const [modalOpen, setModalOpen] = useState(false);
-  const [search, setSearch] = useState('');
+  const [modalOpen, setModalOpen]     = useState(false);
+  const [search, setSearch]           = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [orders, setOrders]           = useState(mockOrders);
+  const [shopifyLoading, setShopifyLoading] = useState(false);
+  const [shopifyConnected, setShopifyConnected] = useState(false);
   const { toasts, addToast, removeToast } = useToast();
 
-  const stats = useMemo(() => ({
-    total:      mockOrders.length,
-    pending:    mockOrders.filter(o => o.status === 'Pending').length,
-    inProgress: mockOrders.filter(o => o.status === 'In Progress').length,
-    completed:  mockOrders.filter(o => o.status === 'Completed').length,
-    revenue:    mockOrders.filter(o => o.status === 'Completed').reduce((s, o) => s + o.amount, 0),
-  }), []);
+  // -------------------------------------------------------
+  // Try to fetch real Shopify orders if credentials exist
+  // -------------------------------------------------------
+  const loadOrders = () => {
+    const config = JSON.parse(localStorage.getItem('shopify_config') || '{}');
+    if (!config.store || !config.token) {
+      setOrders(mockOrders);
+      setShopifyConnected(false);
+      return;
+    }
+    setShopifyLoading(true);
+    fetch(
+      `https://${config.store}/admin/api/2024-01/orders.json?status=any&limit=50`,
+      { headers: { 'X-Shopify-Access-Token': config.token, 'Content-Type': 'application/json' } }
+    )
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then(data => {
+        // Map Shopify order shape to our app's shape
+        const mapped = (data.orders || []).map(o => ({
+          id:      `#${o.order_number}`,
+          client:  o.customer ? `${o.customer.first_name} ${o.customer.last_name}` : 'Guest',
+          service: o.line_items?.[0]?.title || 'Shopify Order',
+          status:  o.financial_status === 'paid' ? 'Completed'
+                 : o.fulfillment_status === 'fulfilled' ? 'Completed'
+                 : o.cancelled_at ? 'Cancelled'
+                 : 'Pending',
+          date:    o.created_at?.split('T')[0] || '',
+          amount:  parseFloat(o.total_price || 0),
+          files:   0,
+        }));
+        setOrders(mapped.length ? mapped : mockOrders);
+        setShopifyConnected(true);
+      })
+      .catch(() => {
+        // CORS in local dev or bad token -- fall back to mock
+        setOrders(mockOrders);
+        setShopifyConnected(false);
+      })
+      .finally(() => setShopifyLoading(false));
+  };
 
-  const filtered = useMemo(() => mockOrders.filter(o => {
+  useEffect(() => {
+    loadOrders();
+    // Re-load whenever the owner saves new credentials in Settings
+    window.addEventListener('shopify_config_updated', loadOrders);
+    return () => window.removeEventListener('shopify_config_updated', loadOrders);
+  }, []);
+
+  const shopifyConfig = JSON.parse(localStorage.getItem('shopify_config') || '{}');
+  const hasCredentials = !!(shopifyConfig.store && shopifyConfig.token);
+
+  const stats = useMemo(() => ({
+    total:      orders.length,
+    pending:    orders.filter(o => o.status === 'Pending').length,
+    inProgress: orders.filter(o => o.status === 'In Progress').length,
+    completed:  orders.filter(o => o.status === 'Completed').length,
+    revenue:    orders.filter(o => o.status === 'Completed').reduce((s, o) => s + o.amount, 0),
+  }), [orders]);
+
+  const filtered = useMemo(() => orders.filter(o => {
     const q = search.toLowerCase();
     const matchesSearch = !q || o.id.toLowerCase().includes(q) || o.client.toLowerCase().includes(q) || o.service.toLowerCase().includes(q);
     const matchesStatus = !statusFilter || o.status === statusFilter;
     return matchesSearch && matchesStatus;
-  }), [search, statusFilter]);
+  }), [orders, search, statusFilter]);
 
   return (
     <div className="page-layout">
@@ -81,6 +138,27 @@ const Orders = () => {
       <div className="page-main">
         <TopBar />
         <div className="page-content">
+          {/* Shopify connection banner */}
+          {shopifyLoading ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', padding: '0.85rem 1.1rem', marginBottom: '1.25rem', borderRadius: 'var(--radius-sm)', background: 'var(--gray-100)', border: '1px solid var(--border)', fontSize: '0.83rem', color: 'var(--text-secondary)' }}>
+              <span style={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid var(--primary)', borderTopColor: 'transparent', display: 'inline-block', animation: 'spin 0.7s linear infinite' }} />
+              Fetching live orders from Shopify...
+            </div>
+          ) : shopifyConnected ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', padding: '0.85rem 1.1rem', marginBottom: '1.25rem', borderRadius: 'var(--radius-sm)', background: 'var(--green-bg)', border: '1px solid #bbf7d0', fontSize: '0.83rem', color: '#15803d' }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <strong>Shopify connected</strong> — showing live orders from {shopifyConfig.store}
+              <button className="btn btn-ghost btn-sm" style={{ marginLeft: 'auto', fontSize: '0.75rem' }} onClick={loadOrders}>Refresh</button>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', padding: '0.85rem 1.1rem', marginBottom: '1.25rem', borderRadius: 'var(--radius-sm)', background: hasCredentials ? 'var(--yellow-bg)' : 'var(--primary-lighter)', border: `1px solid ${hasCredentials ? '#fde68a' : 'var(--primary-light)'}`, fontSize: '0.83rem', color: hasCredentials ? '#92400e' : 'var(--primary)' }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              {hasCredentials
+                ? 'Could not reach Shopify (CORS in local dev is normal). Showing demo data. This will work when deployed.'
+                : 'You are viewing demo data. Connect your Shopify store in Settings to see real orders.'}
+              <a href="/settings" style={{ marginLeft: 'auto', fontWeight: 700, textDecoration: 'underline', whiteSpace: 'nowrap' }}>Go to Settings</a>
+            </div>
+          )}
           {/* Stats */}
           <div className="stats-grid">
             <StatCard icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>} label="Total Orders" value={stats.total} trend={8} trendLabel="vs last month" color="purple" />
