@@ -10,10 +10,10 @@ Open http://localhost:5173/ and use these credentials:
 
 | Field    | Value   |
 |----------|---------|
-| Username | `admin` |
+| Username | `adminov` |
 | Password | `admin` |
 
-Type admin in both fields and hit Sign In.
+Type adminov in the username field and admin in the password field, then hit Sign In.
 
 ---
 

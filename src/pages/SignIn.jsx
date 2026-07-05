@@ -19,7 +19,7 @@ const SignIn = () => {
     setError('');
 
     // Mock admin login — works offline without backend
-    if (formData.email === 'admin' && formData.password === 'admin') {
+    if (formData.email === 'adminov' && formData.password === 'admin') {
       localStorage.setItem('token', 'mock-admin-token');
       setIsLoading(false);
       navigate('/orders');
@@ -95,7 +95,7 @@ const SignIn = () => {
                 type="text"
                 name="email"
                 className="form-input signin-input-lg"
-                placeholder="admin"
+                placeholder="adminov"
                 value={formData.email}
                 onChange={handleChange}
                 required
