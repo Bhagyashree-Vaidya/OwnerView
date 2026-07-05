@@ -1,10 +1,10 @@
-# OwnerView Admin Dashboard [LINK <https://bhagyashree-vaidya.github.io/OwnerView/>]
+# OwnerView Admin Dashboard [LINK](https://bhagyashree-vaidya.github.io/OwnerView/) 
 
 OwnerView is a super admin panel for business owners to manage everything that comes through their store. You can track orders, manage customers, moderate reviews, handle working files, and connect your Shopify store so orders flow in automatically.
 
 ---
 
-## How to Log In
+## How to Log In Locally
 
 Open http://localhost:5173/ and use these credentials:
 
